@@ -18,7 +18,7 @@ class NewsArticleViewSet(viewsets.ModelViewSet):
             user.is_authenticated
             and (
                 user.is_superuser
-                or user.role in ("organizer", "admin")
+                or user.groups.filter(name__in=("organizer", "admin")).exists()
             )
         )
 
