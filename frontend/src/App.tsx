@@ -16,6 +16,7 @@ import FeedbackPage from './pages/FeedbackPage'
 import OrganizerPage from './pages/OrganizerPage'
 import ProfilePage from './pages/ProfilePage'
 import DashboardPage from './pages/DashboardPage'
+import UrgentBanner from './components/UrgentBanner'
 import { ToastProvider } from './components/Toast'
 import type { UserProfile } from './types'
 import api from './api'
@@ -30,6 +31,7 @@ function Layout({
 }) {
   return (
     <div className="app-shell">
+      <UrgentBanner />
       <Navbar user={user} onLogout={onLogout} />
       <main className="main-content">
         <Outlet />

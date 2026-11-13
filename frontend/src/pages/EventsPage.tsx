@@ -26,6 +26,16 @@ export default function EventsPage({ user }: EventsPageProps) {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [timeFilter, setTimeFilter] = useState<'all' | 'upcoming' | 'past'>('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+
+  const categories = [
+    { id: 'all', label: 'All Themes' },
+    { id: 'tech', label: '💻 Tech & AI', keywords: ['tech', 'code', 'python', 'software', 'ai', 'data', 'web', 'dev'] },
+    { id: 'creative', label: '🎨 Arts & Creative', keywords: ['art', 'music', 'dance', 'film', 'theatre', 'creative', 'culture'] },
+    { id: 'hackathon', label: '🚀 Hackathons', keywords: ['hack', 'hackathon', 'competition', 'challenge'] },
+    { id: 'workshop', label: '🎓 Workshops', keywords: ['workshop', 'training', 'masterclass', 'bootcamp', 'session'] },
+    { id: 'community', label: '🤝 Community', keywords: ['meetup', 'gathering', 'community', 'youth', 'forum'] },
+  ]
 
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -80,8 +90,18 @@ export default function EventsPage({ user }: EventsPageProps) {
         return endMs >= now
       }
       if (timeFilter === 'past') {
-        return endMs < now
+        if (endMs >= now) return false
       }
+
+      if (categoryFilter !== 'all') {
+        const cat = categories.find((c) => c.id === categoryFilter)
+        if (cat?.keywords) {
+          const text = `${ev.title} ${ev.description} ${ev.venue}`.toLowerCase()
+          const matches = cat.keywords.some((k) => text.includes(k))
+          if (!matches) return false
+        }
+      }
+
       return true
     })
 
@@ -185,6 +205,20 @@ export default function EventsPage({ user }: EventsPageProps) {
             Past Events
           </button>
         </div>
+      </div>
+
+      {/* Category Theme Chips */}
+      <div className="category-chips-bar">
+        {categories.map((cat) => (
+          <button
+            type="button"
+            key={cat.id}
+            className={`cat-chip ${categoryFilter === cat.id ? 'active' : ''}`}
+            onClick={() => setCategoryFilter(cat.id)}
+          >
+            {cat.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (

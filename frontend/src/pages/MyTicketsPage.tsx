@@ -11,16 +11,19 @@ import {
   Check,
   MessageSquare,
   Printer,
+  Maximize2,
 } from 'lucide-react'
 import type { EventRegistrationItem } from '../types'
 import api from '../api'
 import { useToast } from '../components/Toast'
+import TicketPassModal from '../components/TicketPassModal'
 
 export default function MyTicketsPage() {
   const { showToast } = useToast()
   const [registrations, setRegistrations] = useState<EventRegistrationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const [selectedPass, setSelectedPass] = useState<EventRegistrationItem | null>(null)
 
   useEffect(() => {
     async function fetchTickets() {
@@ -173,28 +176,46 @@ export default function MyTicketsPage() {
 
                   <span className="qr-caption">Scan at Entrance</span>
 
-                  <button
-                    type="button"
-                    className="btn-copy-token no-print"
-                    onClick={() => handleCopy(reg.qr_token)}
-                    title="Copy QR token string"
-                  >
-                    {copiedToken === reg.qr_token ? (
-                      <>
-                        <Check size={13} /> <span>Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={13} /> <span>Copy Code</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="qr-actions-row no-print">
+                    <button
+                      type="button"
+                      className="btn-copy-token"
+                      onClick={() => handleCopy(reg.qr_token)}
+                      title="Copy QR token string"
+                    >
+                      {copiedToken === reg.qr_token ? (
+                        <>
+                          <Check size={13} /> <span>Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} /> <span>Copy Code</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-enlarge-pass"
+                      onClick={() => setSelectedPass(reg)}
+                      title="Enlarge pass for scanning"
+                    >
+                      <Maximize2 size={13} />
+                      <span>Full Pass</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )
           })}
         </div>
       )}
+
+      <TicketPassModal
+        registration={selectedPass}
+        isOpen={Boolean(selectedPass)}
+        onClose={() => setSelectedPass(null)}
+      />
     </div>
   )
 }

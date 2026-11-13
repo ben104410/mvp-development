@@ -2762,7 +2762,8 @@
 @media print {
   .no-print,
   .navbar,
-  .toast-container {
+  .toast-container,
+  .urgent-banner {
     display: none !important;
   }
 
@@ -2778,5 +2779,489 @@
     margin-bottom: 24px;
   }
 }
+
+/* Urgent Announcement Banner */
+.urgent-banner {
+  background: linear-gradient(90deg, #b91c1c 0%, #dc2626 100%);
+  color: #fff;
+  font-size: 13px;
+  padding: 8px 16px;
+  position: relative;
+  z-index: 45;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.urgent-banner-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.urgent-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.urgent-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.urgent-title {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.urgent-sep {
+  opacity: 0.6;
+}
+
+.urgent-msg {
+  opacity: 0.95;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.urgent-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.urgent-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  font-size: 12px;
+}
+
+.urgent-close {
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.urgent-close:hover {
+  color: #fff;
+}
+
+/* Theme Toggle Button */
+.btn-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-theme-toggle:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.theme-icon {
+  transition: transform 0.2s ease;
+}
+
+.btn-theme-toggle:hover .theme-icon {
+  transform: rotate(15deg);
+}
+
+/* Category Chips Bar */
+.category-chips-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+}
+
+.cat-chip {
+  padding: 7px 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.cat-chip:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.cat-chip.active {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}
+
+/* Enlarge Ticket Pass Modal */
+.modal-ticket-pass {
+  max-width: 420px;
+  text-align: center;
+}
+
+.pass-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pass-brand {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pass-modal-body {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pass-status-badge {
+  margin-bottom: 12px;
+}
+
+.pass-modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 14px;
+  line-height: 1.3;
+}
+
+.pass-details-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.pass-detail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pass-qr-display {
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e2e8f0;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.pass-qr-instruction {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.pass-token-copy-box {
+  width: 100%;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pass-token-text {
+  font-size: 11px;
+  font-family: monospace;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-copy-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn-copy-sm:hover {
+  background: #e2e8f0;
+}
+
+.btn-enlarge-pass {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-enlarge-pass:hover {
+  background: #eff6ff;
+}
+
+.qr-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ==========================================================================
+   Dark Mode Overrides
+   ========================================================================== */
+html.dark {
+  --bg-page: #0b132b;
+  --bg-card: #1c2541;
+  --bg-subtle: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+}
+
+html.dark body,
+html.dark .app-shell {
+  background-color: #0b132b;
+  color: #f8fafc;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4 {
+  color: #f8fafc;
+}
+
+html.dark .navbar {
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom-color: #1e293b;
+}
+
+html.dark .brand {
+  color: #f8fafc;
+}
+
+html.dark .nav-link {
+  color: #94a3b8;
+}
+
+html.dark .nav-link:hover {
+  color: #f8fafc;
+  background: #1e293b;
+}
+
+html.dark .nav-link.active {
+  background: #1e3a8a;
+  color: #60a5fa;
+}
+
+html.dark .user-pill {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+html.dark .btn-theme-toggle {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f59e0b;
+}
+
+html.dark .btn-theme-toggle:hover {
+  background: #334155;
+  color: #fbbf24;
+}
+
+html.dark .event-card,
+html.dark .ticket-card,
+html.dark .announcement-card,
+html.dark .news-card,
+html.dark .feedback-form-card,
+html.dark .feedback-history-card,
+html.dark .kpi-card,
+html.dark .quick-scan-card,
+html.dark .analytics-section,
+html.dark .profile-card,
+html.dark .profile-activity-card,
+html.dark .featured-card,
+html.dark .modal-card {
+  background: #1c2541;
+  border-color: #2e3a59;
+  color: #f8fafc;
+}
+
+html.dark .event-card-header,
+html.dark .event-meta,
+html.dark .featured-footer,
+html.dark .analytics-table td,
+html.dark .modal-header,
+html.dark .details-actions,
+html.dark .pass-modal-header {
+  border-color: #2e3a59;
+}
+
+html.dark .event-title,
+html.dark .ticket-event-title,
+html.dark .details-title,
+html.dark .kpi-value,
+html.dark .profile-username,
+html.dark .featured-title {
+  color: #f8fafc;
+}
+
+html.dark .event-description,
+html.dark .details-desc,
+html.dark .kpi-label,
+html.dark .page-desc,
+html.dark .welcome-desc {
+  color: #94a3b8;
+}
+
+html.dark .search-box input,
+html.dark .quick-scan-form input,
+html.dark .modal-form input,
+html.dark .modal-form select,
+html.dark .modal-form textarea,
+html.dark .feedback-form select,
+html.dark .feedback-form textarea,
+html.dark .scanner-form input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+html.dark .search-box input:focus,
+html.dark .modal-form input:focus {
+  border-color: #3b82f6;
+}
+
+html.dark .cat-chip,
+html.dark .filter-chip {
+  background: #1c2541;
+  border-color: #2e3a59;
+  color: #94a3b8;
+}
+
+html.dark .cat-chip:hover,
+html.dark .filter-chip:hover {
+  background: #2e3a59;
+  color: #f8fafc;
+}
+
+html.dark .cat-chip.active,
+html.dark .filter-chip.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+html.dark .details-meta-grid,
+html.dark .feedback-item-card,
+html.dark .activity-row,
+html.dark .ticket-qr-section,
+html.dark .pass-token-copy-box {
+  background: #0f172a;
+  border-color: #2e3a59;
+}
+
+html.dark .details-meta-grid p {
+  color: #f8fafc;
+}
+
+html.dark .analytics-table th {
+  background: #0f172a;
+  color: #94a3b8;
+  border-bottom-color: #2e3a59;
+}
+
+html.dark .analytics-table td {
+  color: #cbd5e1;
+}
+
+html.dark .btn-secondary {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+html.dark .btn-secondary:hover {
+  background: #334155;
+}
+
+html.dark .empty-state,
+html.dark .no-pass-card {
+  background: #1c2541;
+  border-color: #2e3a59;
+}
+
+html.dark .no-pass-content h3 {
+  color: #f8fafc;
+}
+
 
 

@@ -10,6 +10,7 @@ import {
   User,
 } from 'lucide-react'
 import type { UserProfile } from '../types'
+import ThemeToggle from './ThemeToggle'
 
 interface NavbarProps {
   user: UserProfile | null
@@ -65,6 +66,7 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
         </nav>
 
         <div className="nav-user-section">
+          <ThemeToggle />
           {user && (
             <Link to="/profile" className="user-pill" title="View my profile">
               <User size={16} />
