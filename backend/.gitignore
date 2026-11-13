@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+*.log
+local_settings.py
+media/
+staticfiles/
+.vscode/
