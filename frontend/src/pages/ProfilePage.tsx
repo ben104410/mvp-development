@@ -8,9 +8,15 @@ import {
   MessageSquare,
   Calendar,
   LogOut,
+  Award,
+  Star,
+  QrCode,
+  Sparkles,
 } from 'lucide-react'
 import type { UserProfile, EventRegistrationItem, FeedbackItem } from '../types'
 import api from '../api'
+import AttendanceSummaryModal from '../components/AttendanceSummaryModal'
+import TicketPassModal from '../components/TicketPassModal'
 
 interface ProfilePageProps {
   user: UserProfile | null
@@ -21,6 +27,9 @@ export default function ProfilePage({ user, onLogout }: ProfilePageProps) {
   const [registrations, setRegistrations] = useState<EventRegistrationItem[]>([])
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'passes' | 'feedback' | 'badges'>('passes')
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false)
+  const [selectedPass, setSelectedPass] = useState<EventRegistrationItem | null>(null)
 
   const isOrganizer = Boolean(
     user?.is_superuser ||
@@ -46,6 +55,38 @@ export default function ProfilePage({ user, onLogout }: ProfilePageProps) {
 
   const checkedInCount = registrations.filter((r) => r.checked_in).length
 
+  // Badges logic
+  const badges = [
+    {
+      id: 'member',
+      title: 'Community Pioneer',
+      desc: 'Registered member of Swahilipot Hub',
+      earned: true,
+      icon: '🏛️',
+    },
+    {
+      id: 'active',
+      title: 'Active Participant',
+      desc: 'Attended at least 1 verified event',
+      earned: checkedInCount >= 1,
+      icon: '🎯',
+    },
+    {
+      id: 'veteran',
+      title: 'Hub Champion',
+      desc: 'Attended 3 or more workshops & sessions',
+      earned: checkedInCount >= 3,
+      icon: '🏆',
+    },
+    {
+      id: 'voice',
+      title: 'Community Voice',
+      desc: 'Submitted feedback to help improve the hub',
+      earned: feedbacks.length >= 1,
+      icon: '⭐',
+    },
+  ]
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -57,15 +98,26 @@ export default function ProfilePage({ user, onLogout }: ProfilePageProps) {
           </p>
         </div>
 
-        <button
-          type="button"
-          className="btn-danger-outline"
-          onClick={onLogout}
-          title="Sign out of your account"
-        >
-          <LogOut size={16} />
-          <span>Sign Out</span>
-        </button>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="btn-outline"
+            onClick={() => setIsCertModalOpen(true)}
+            title="View official attendance record transcript"
+          >
+            <Award size={17} />
+            <span>Attendance Record</span>
+          </button>
+          <button
+            type="button"
+            className="btn-danger-outline"
+            onClick={onLogout}
+            title="Sign out of your account"
+          >
+            <LogOut size={16} />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
 
       <div className="profile-grid">
@@ -102,10 +154,18 @@ export default function ProfilePage({ user, onLogout }: ProfilePageProps) {
                 </span>
               </div>
             </div>
+
+            <div className="info-item">
+              <Sparkles size={16} className="info-icon" />
+              <div>
+                <span className="info-label">Hub Status</span>
+                <span className="info-val">Verified Community Member</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Stats Column */}
+        {/* Stats & Tabs Column */}
         <div className="profile-stats-col">
           <div className="kpi-grid">
             <div className="kpi-card">
@@ -139,29 +199,125 @@ export default function ProfilePage({ user, onLogout }: ProfilePageProps) {
             </div>
           </div>
 
-          {/* Activity Overview */}
+          {/* Profile Content Tabs */}
           <div className="profile-activity-card">
-            <h3>Recent Event Registrations</h3>
+            <div className="profile-tabs-header">
+              <button
+                type="button"
+                className={`tab-btn ${activeTab === 'passes' ? 'active' : ''}`}
+                onClick={() => setActiveTab('passes')}
+              >
+                <Ticket size={16} />
+                <span>My Passes ({registrations.length})</span>
+              </button>
+              <button
+                type="button"
+                className={`tab-btn ${activeTab === 'feedback' ? 'active' : ''}`}
+                onClick={() => setActiveTab('feedback')}
+              >
+                <MessageSquare size={16} />
+                <span>My Reviews ({feedbacks.length})</span>
+              </button>
+              <button
+                type="button"
+                className={`tab-btn ${activeTab === 'badges' ? 'active' : ''}`}
+                onClick={() => setActiveTab('badges')}
+              >
+                <Award size={16} />
+                <span>Hub Badges</span>
+              </button>
+            </div>
+
             {loading ? (
-              <p className="loading-text">Loading activity...</p>
-            ) : registrations.length === 0 ? (
-              <p className="empty-text">No event registrations found.</p>
+              <div className="loading-state">
+                <div className="spinner" />
+                <p>Loading member data...</p>
+              </div>
+            ) : activeTab === 'passes' ? (
+              registrations.length === 0 ? (
+                <div className="empty-state-mini">
+                  <p>No event passes booked yet.</p>
+                </div>
+              ) : (
+                <div className="activity-list">
+                  {registrations.map((reg) => (
+                    <div key={reg.id} className="activity-row">
+                      <div className="activity-info">
+                        <strong>{reg.event_title}</strong>
+                        <span className="activity-sub">
+                          <Calendar size={12} />{' '}
+                          {new Date(reg.event_starts_at).toLocaleDateString()} • {reg.event_venue}
+                        </span>
+                      </div>
+
+                      <div className="activity-actions">
+                        {reg.checked_in ? (
+                          <span className="badge badge-success">Attended</span>
+                        ) : (
+                          <span className="badge badge-primary">Pass Active</span>
+                        )}
+                        <button
+                          type="button"
+                          className="btn-icon-table"
+                          onClick={() => setSelectedPass(reg)}
+                          title="View Digital QR Pass"
+                        >
+                          <QrCode size={14} />
+                          <span>Show QR</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : activeTab === 'feedback' ? (
+              feedbacks.length === 0 ? (
+                <div className="empty-state-mini">
+                  <p>You haven't submitted any feedback yet.</p>
+                </div>
+              ) : (
+                <div className="activity-list">
+                  {feedbacks.map((fb) => (
+                    <div key={fb.id} className="activity-row flex-column">
+                      <div className="activity-feedback-top">
+                        <div className="fb-stars">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={13}
+                              className={s <= fb.rating ? 'star-filled' : 'star-empty'}
+                            />
+                          ))}
+                        </div>
+                        <span className="fb-date">
+                          {new Date(fb.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="fb-text">"{fb.comments}"</p>
+                      {fb.event_title && (
+                        <span className="fb-event-tag">
+                          <Calendar size={12} /> {fb.event_title}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
             ) : (
-              <div className="activity-list">
-                {registrations.slice(0, 5).map((reg) => (
-                  <div key={reg.id} className="activity-row">
-                    <div className="activity-info">
-                      <strong>{reg.event_title}</strong>
-                      <span className="activity-sub">
-                        <Calendar size={12} />{' '}
-                        {new Date(reg.event_starts_at).toLocaleDateString()} • {reg.event_venue}
+              <div className="badges-grid">
+                {badges.map((b) => (
+                  <div
+                    key={b.id}
+                    className={`badge-card ${b.earned ? 'earned' : 'locked'}`}
+                  >
+                    <span className="badge-card-icon">{b.icon}</span>
+                    <div className="badge-card-info">
+                      <h4>{b.title}</h4>
+                      <p>{b.desc}</p>
+                      <span className="badge-status-tag">
+                        {b.earned ? '✓ Earned' : 'Locked'}
                       </span>
                     </div>
-                    {reg.checked_in ? (
-                      <span className="badge badge-success">Attended</span>
-                    ) : (
-                      <span className="badge badge-primary">Pass Active</span>
-                    )}
                   </div>
                 ))}
               </div>
@@ -169,6 +325,20 @@ export default function ProfilePage({ user, onLogout }: ProfilePageProps) {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <AttendanceSummaryModal
+        isOpen={isCertModalOpen}
+        onClose={() => setIsCertModalOpen(false)}
+        user={user}
+        registrations={registrations}
+      />
+      <TicketPassModal
+        isOpen={Boolean(selectedPass)}
+        onClose={() => setSelectedPass(null)}
+        registration={selectedPass}
+        username={user?.username}
+      />
     </div>
   )
 }
