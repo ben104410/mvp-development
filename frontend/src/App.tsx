@@ -15,6 +15,7 @@ import AnnouncementsPage from './pages/AnnouncementsPage'
 import FeedbackPage from './pages/FeedbackPage'
 import OrganizerPage from './pages/OrganizerPage'
 import ProfilePage from './pages/ProfilePage'
+import DashboardPage from './pages/DashboardPage'
 import { ToastProvider } from './components/Toast'
 import type { UserProfile } from './types'
 import api from './api'
@@ -95,14 +96,14 @@ export default function App() {
 
           {/* Protected Application Routes */}
           <Route element={<ProtectedRoute user={user} onLogout={handleLogout} />}>
-            <Route path="/" element={<Navigate to="/events" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage user={user} />} />
             <Route path="/events" element={<EventsPage user={user} />} />
             <Route path="/tickets" element={<MyTicketsPage />} />
             <Route path="/announcements" element={<AnnouncementsPage user={user} />} />
             <Route path="/feedback" element={<FeedbackPage user={user} />} />
             <Route path="/organizer" element={<OrganizerPage user={user} />} />
             <Route path="/profile" element={<ProfilePage user={user} onLogout={handleLogout} />} />
-            <Route path="/dashboard" element={<Navigate to="/events" replace />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
+  LayoutDashboard,
   Calendar,
   Ticket,
   Bell,
@@ -23,6 +24,7 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
   )
 
   const navLinks = [
+    { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
     { to: '/events', label: 'Events', icon: Calendar },
     { to: '/tickets', label: 'My Tickets', icon: Ticket },
     { to: '/announcements', label: 'News & Updates', icon: Bell },

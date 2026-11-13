@@ -6,13 +6,14 @@ import {
   Users,
   Video,
   CheckCircle2,
-  ExternalLink,
   CalendarPlus,
   Share2,
   Check,
+  Play,
 } from 'lucide-react'
 import type { EventItem, UserProfile } from '../types'
 import api from '../api'
+import LivestreamModal from './LivestreamModal'
 
 interface EventDetailsModalProps {
   event: EventItem | null
@@ -36,6 +37,7 @@ export default function EventDetailsModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [isStreamOpen, setIsStreamOpen] = useState(false)
 
   if (!isOpen || !event) return null
 
@@ -150,17 +152,16 @@ export default function EventDetailsModal({
               <Video size={20} className="livestream-icon" />
               <div className="livestream-info">
                 <strong>Online Livestream Available</strong>
-                <p>Can't make it in person? Tune into the official livestream.</p>
+                <p>Can't make it in person? Tune into the live video stream.</p>
               </div>
-              <a
-                href={event.livestream_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline"
+              <button
+                type="button"
+                className="btn-primary btn-stream"
+                onClick={() => setIsStreamOpen(true)}
               >
+                <Play size={14} />
                 <span>Watch Stream</span>
-                <ExternalLink size={14} />
-              </a>
+              </button>
             </div>
           )}
 
@@ -225,6 +226,13 @@ export default function EventDetailsModal({
           </div>
         </div>
       </div>
+
+      <LivestreamModal
+        isOpen={isStreamOpen}
+        onClose={() => setIsStreamOpen(false)}
+        eventTitle={event.title}
+        livestreamUrl={event.livestream_url}
+      />
     </div>
   )
 }
