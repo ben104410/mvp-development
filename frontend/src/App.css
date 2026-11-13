@@ -377,6 +377,7 @@
   margin: 0 0 16px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1432,66 +1433,105 @@
   font-size: 14px;
 }
 
-/* Login/Register Page styles (Preserved) */
+/* Login/Register Page styles */
 .login-page {
   display: grid;
   min-height: 100vh;
   place-items: center;
   padding: 24px;
+  background: linear-gradient(135deg, #0b192c 0%, #1e3a8a 50%, #0f172a 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, transparent 70%);
+  top: 10%;
+  left: 20%;
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
-  padding: 32px;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 12px 40px #152b4612;
+  max-width: 440px;
+  padding: 36px 32px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1;
 }
 
 .login-card h1 {
   margin: 0 0 8px;
-  color: #12366b;
-  font-size: 25px;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .login-card > p {
-  margin: 0;
+  margin: 0 0 20px;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .login-card > .form-footer {
-  margin-top: 18px;
+  margin-top: 24px;
   text-align: center;
+  font-size: 14px;
+  color: #64748b;
 }
 
 .form-footer a {
-  color: #12366b;
+  color: #2563eb;
   font-weight: 600;
+}
+
+.form-footer a:hover {
+  text-decoration: underline;
 }
 
 .success {
   margin-top: 16px !important;
-  color: #067647;
-  font-size: 14px;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .login-card label {
   display: block;
-  margin: 18px 0 7px;
+  margin: 16px 0 6px;
   font-weight: 600;
+  font-size: 13px;
+  color: #334155;
 }
 
 .login-card input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ccd5e2;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 15px;
+  background: #f8fafc;
+  transition: all 0.15s ease;
 }
 
-.login-card input:focus-visible {
-  outline: 2px solid #12366b;
-  outline-offset: 2px;
+.login-card input:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .login-card button {
@@ -1499,21 +1539,105 @@
   margin-top: 24px;
   padding: 13px;
   border: 0;
-  border-radius: 8px;
-  background: #12366b;
+  border-radius: 10px;
+  background: #2563eb;
   color: #fff;
+  font-weight: 600;
+  font-size: 15px;
   cursor: pointer;
+  transition: background 0.15s;
+}
+
+.login-card button:hover:not(:disabled) {
+  background: #1d4ed8;
 }
 
 .login-card button:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: wait;
 }
 
 .error {
   margin-top: 16px !important;
-  color: #b42318;
-  font-size: 14px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Responsive Navbar & Mobile Tweaks */
+@media (max-width: 768px) {
+  .navbar-container {
+    height: auto;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .nav-menu {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    justify-content: flex-start;
+  }
+
+  .nav-link {
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .page-container {
+    padding: 20px 16px 48px;
+  }
+
+  .hero-banner {
+    padding: 28px 20px;
+  }
+
+  .hero-headline {
+    font-size: 24px;
+  }
+
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tickets-list {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-card {
+    flex-direction: column;
+  }
+
+  .ticket-divider {
+    display: none;
+  }
+
+  .ticket-qr-section {
+    width: 100%;
+    border-top: 1px dashed #e2e8f0;
+  }
+
+  .details-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .details-aux-actions,
+  .details-primary-actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .details-primary-actions button {
+    width: 100%;
+  }
 }
 
 /* Toast Notifications */
