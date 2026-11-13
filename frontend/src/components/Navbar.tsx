@@ -64,11 +64,11 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
 
         <div className="nav-user-section">
           {user && (
-            <div className="user-pill">
+            <Link to="/profile" className="user-pill" title="View my profile">
               <User size={16} />
               <span className="user-name">{user.username}</span>
               {isOrganizer && <span className="role-tag">Organizer</span>}
-            </div>
+            </Link>
           )}
           <button
             type="button"

@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react'
-import { X, QrCode, CheckCircle2, AlertCircle } from 'lucide-react'
+import { useState, useEffect, type FormEvent } from 'react'
+import { X, QrCode, Camera, CheckCircle2, AlertCircle, Keyboard } from 'lucide-react'
+import { Html5QrcodeScanner } from 'html5-qrcode'
 import api from '../api'
 
 interface QRScannerModalProps {
@@ -20,24 +21,22 @@ export default function QRScannerModal({
   onClose,
   onSuccess,
 }: QRScannerModalProps) {
+  const [mode, setMode] = useState<'camera' | 'manual'>('camera')
   const [qrToken, setQrToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<ScanResult | null>(null)
 
-  if (!isOpen) return null
-
-  async function handleScan(e: FormEvent) {
-    e.preventDefault()
-    if (!qrToken.trim()) return
-
+  // Process check-in API call
+  async function submitCheckIn(token: string) {
+    if (!token.trim()) return
     setError('')
     setResult(null)
     setLoading(true)
 
     try {
       const response = await api.post<ScanResult>('/check-ins/scan/', {
-        qr_token: qrToken.trim(),
+        qr_token: token.trim(),
       })
       setResult(response.data)
       setQrToken('')
@@ -60,6 +59,54 @@ export default function QRScannerModal({
     }
   }
 
+  // Camera scanner setup
+  useEffect(() => {
+    if (!isOpen || mode !== 'camera' || result) return
+
+    let scanner: Html5QrcodeScanner | null = null
+    const timer = setTimeout(() => {
+      try {
+        scanner = new Html5QrcodeScanner(
+          'qr-camera-reader',
+          {
+            fps: 10,
+            qrbox: { width: 220, height: 220 },
+            rememberLastUsedCamera: true,
+          },
+          false,
+        )
+
+        scanner.render(
+          (decodedText) => {
+            if (decodedText) {
+              submitCheckIn(decodedText)
+              scanner?.clear().catch(() => {})
+            }
+          },
+          () => {
+            // Ignore scan frame misses
+          },
+        )
+      } catch {
+        setError('Could not initialize camera. Use manual mode instead.')
+      }
+    }, 150)
+
+    return () => {
+      clearTimeout(timer)
+      if (scanner) {
+        scanner.clear().catch(() => {})
+      }
+    }
+  }, [isOpen, mode, result])
+
+  if (!isOpen) return null
+
+  function handleManualSubmit(e: FormEvent) {
+    e.preventDefault()
+    submitCheckIn(qrToken)
+  }
+
   function handleReset() {
     setResult(null)
     setError('')
@@ -80,35 +127,68 @@ export default function QRScannerModal({
         </div>
 
         <div className="modal-body">
-          <p className="scanner-hint">
-            Scan attendee QR code or paste their unique ticket token below:
-          </p>
-
-          <form onSubmit={handleScan} className="scanner-form">
-            <label htmlFor="token-input">QR Token UUID</label>
-            <input
-              id="token-input"
-              value={qrToken}
-              onChange={(e) => setQrToken(e.target.value)}
-              placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
-              autoFocus
-              required
-            />
-
+          {/* Scanner Mode Toggle */}
+          <div className="scanner-mode-tabs">
             <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading || !qrToken.trim()}
+              type="button"
+              className={`scanner-tab-btn ${mode === 'camera' ? 'active' : ''}`}
+              onClick={() => {
+                setMode('camera')
+                handleReset()
+              }}
             >
-              {loading ? 'Verifying...' : 'Check In Attendee'}
+              <Camera size={16} />
+              <span>Camera Scanner</span>
             </button>
-          </form>
+            <button
+              type="button"
+              className={`scanner-tab-btn ${mode === 'manual' ? 'active' : ''}`}
+              onClick={() => {
+                setMode('manual')
+                handleReset()
+              }}
+            >
+              <Keyboard size={16} />
+              <span>Manual Input</span>
+            </button>
+          </div>
+
+          {!result && mode === 'camera' && (
+            <div className="camera-scan-wrap">
+              <div id="qr-camera-reader" />
+              <p className="scanner-hint">
+                Position the attendee's QR ticket within the camera frame.
+              </p>
+            </div>
+          )}
+
+          {!result && mode === 'manual' && (
+            <form onSubmit={handleManualSubmit} className="scanner-form">
+              <label htmlFor="token-input">QR Token UUID</label>
+              <input
+                id="token-input"
+                value={qrToken}
+                onChange={(e) => setQrToken(e.target.value)}
+                placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+                autoFocus
+                required
+              />
+
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading || !qrToken.trim()}
+              >
+                {loading ? 'Verifying...' : 'Check In Attendee'}
+              </button>
+            </form>
+          )}
 
           {result && (
             <div className="scan-success-card">
-              <CheckCircle2 size={32} className="success-icon" />
+              <CheckCircle2 size={36} className="success-icon" />
               <div className="success-details">
-                <h4>Check-In Successful!</h4>
+                <h4>Check-In Verified!</h4>
                 <p>
                   <strong>Attendee:</strong> {result.attendee_username}
                 </p>
@@ -116,15 +196,15 @@ export default function QRScannerModal({
                   <strong>Event:</strong> {result.event_title}
                 </p>
                 <p className="scan-time">
-                  {new Date(result.checked_in_at).toLocaleTimeString()}
+                  Recorded at {new Date(result.checked_in_at).toLocaleTimeString()}
                 </p>
               </div>
               <button
                 type="button"
-                className="btn-secondary"
+                className="btn-primary"
                 onClick={handleReset}
               >
-                Scan Next
+                Scan Next Attendee
               </button>
             </div>
           )}

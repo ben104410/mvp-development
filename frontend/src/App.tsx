@@ -14,6 +14,7 @@ import MyTicketsPage from './pages/MyTicketsPage'
 import AnnouncementsPage from './pages/AnnouncementsPage'
 import FeedbackPage from './pages/FeedbackPage'
 import OrganizerPage from './pages/OrganizerPage'
+import ProfilePage from './pages/ProfilePage'
 import { ToastProvider } from './components/Toast'
 import type { UserProfile } from './types'
 import api from './api'
@@ -100,6 +101,7 @@ export default function App() {
             <Route path="/announcements" element={<AnnouncementsPage user={user} />} />
             <Route path="/feedback" element={<FeedbackPage user={user} />} />
             <Route path="/organizer" element={<OrganizerPage user={user} />} />
+            <Route path="/profile" element={<ProfilePage user={user} onLogout={handleLogout} />} />
             <Route path="/dashboard" element={<Navigate to="/events" replace />} />
           </Route>
 
