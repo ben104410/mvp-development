@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import type { AnnouncementItem, NewsItem, UserProfile } from '../types'
 import api from '../api'
+import ArticleReaderModal from '../components/ArticleReaderModal'
 
 interface AnnouncementsPageProps {
   user: UserProfile | null
@@ -22,6 +23,7 @@ export default function AnnouncementsPage({ user }: AnnouncementsPageProps) {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null)
 
   // Creation form state
   const [annForm, setAnnForm] = useState({
@@ -208,7 +210,13 @@ export default function AnnouncementsPage({ user }: AnnouncementsPageProps) {
       ) : (
         <div className="news-grid">
           {news.map((article) => (
-            <article key={article.id} className="news-card">
+            <article
+              key={article.id}
+              className="news-card interactive-card"
+              onClick={() => setSelectedArticle(article)}
+              role="button"
+              tabIndex={0}
+            >
               {article.image_url ? (
                 <div className="news-image-wrapper">
                   <img src={article.image_url} alt={article.title} />
@@ -230,7 +238,7 @@ export default function AnnouncementsPage({ user }: AnnouncementsPageProps) {
                 </div>
                 <h3 className="news-title">{article.title}</h3>
                 <p className="news-summary">{article.summary}</p>
-                <p className="news-content">{article.content}</p>
+                <span className="read-more-link">Read Full Story →</span>
               </div>
             </article>
           ))}
@@ -375,6 +383,12 @@ export default function AnnouncementsPage({ user }: AnnouncementsPageProps) {
           </div>
         </div>
       )}
+
+      <ArticleReaderModal
+        article={selectedArticle}
+        isOpen={Boolean(selectedArticle)}
+        onClose={() => setSelectedArticle(null)}
+      />
     </div>
   )
 }

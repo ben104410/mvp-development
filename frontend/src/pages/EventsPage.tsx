@@ -5,6 +5,8 @@ import {
   QrCode,
   Sparkles,
   Compass,
+  LayoutGrid,
+  Calendar,
 } from 'lucide-react'
 import type { EventItem, EventRegistrationItem, UserProfile } from '../types'
 import api from '../api'
@@ -13,6 +15,7 @@ import CreateEventModal from '../components/CreateEventModal'
 import QRScannerModal from '../components/QRScannerModal'
 import EventDetailsModal from '../components/EventDetailsModal'
 import EditEventModal from '../components/EditEventModal'
+import EventCalendarView from '../components/EventCalendarView'
 import { useToast } from '../components/Toast'
 
 interface EventsPageProps {
@@ -27,6 +30,7 @@ export default function EventsPage({ user }: EventsPageProps) {
   const [search, setSearch] = useState('')
   const [timeFilter, setTimeFilter] = useState<'all' | 'upcoming' | 'past'>('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid')
 
   const categories = [
     { id: 'all', label: 'All Themes' },
@@ -204,6 +208,27 @@ export default function EventsPage({ user }: EventsPageProps) {
           >
             Past Events
           </button>
+
+          <div className="view-mode-toggle">
+            <button
+              type="button"
+              className={`view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+              title="Grid card view"
+            >
+              <LayoutGrid size={15} />
+              <span>Grid</span>
+            </button>
+            <button
+              type="button"
+              className={`view-mode-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+              onClick={() => setViewMode('calendar')}
+              title="Month calendar view"
+            >
+              <Calendar size={15} />
+              <span>Calendar</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -249,6 +274,11 @@ export default function EventsPage({ user }: EventsPageProps) {
             </button>
           )}
         </div>
+      ) : viewMode === 'calendar' ? (
+        <EventCalendarView
+          events={filteredEvents}
+          onSelectEvent={(ev) => setSelectedEventForDetails(ev)}
+        />
       ) : (
         <div className="events-grid">
           {filteredEvents.map((event) => (
