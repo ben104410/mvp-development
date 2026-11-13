@@ -14,6 +14,7 @@ import MyTicketsPage from './pages/MyTicketsPage'
 import AnnouncementsPage from './pages/AnnouncementsPage'
 import FeedbackPage from './pages/FeedbackPage'
 import OrganizerPage from './pages/OrganizerPage'
+import { ToastProvider } from './components/Toast'
 import type { UserProfile } from './types'
 import api from './api'
 import './App.css'
@@ -86,23 +87,25 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+      <ToastProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Protected Application Routes */}
-        <Route element={<ProtectedRoute user={user} onLogout={handleLogout} />}>
-          <Route path="/" element={<Navigate to="/events" replace />} />
-          <Route path="/events" element={<EventsPage user={user} />} />
-          <Route path="/tickets" element={<MyTicketsPage />} />
-          <Route path="/announcements" element={<AnnouncementsPage user={user} />} />
-          <Route path="/feedback" element={<FeedbackPage user={user} />} />
-          <Route path="/organizer" element={<OrganizerPage user={user} />} />
-          <Route path="/dashboard" element={<Navigate to="/events" replace />} />
-        </Route>
+          {/* Protected Application Routes */}
+          <Route element={<ProtectedRoute user={user} onLogout={handleLogout} />}>
+            <Route path="/" element={<Navigate to="/events" replace />} />
+            <Route path="/events" element={<EventsPage user={user} />} />
+            <Route path="/tickets" element={<MyTicketsPage />} />
+            <Route path="/announcements" element={<AnnouncementsPage user={user} />} />
+            <Route path="/feedback" element={<FeedbackPage user={user} />} />
+            <Route path="/organizer" element={<OrganizerPage user={user} />} />
+            <Route path="/dashboard" element={<Navigate to="/events" replace />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </ToastProvider>
     </BrowserRouter>
   )
 }

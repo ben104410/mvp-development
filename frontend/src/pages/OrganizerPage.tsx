@@ -9,17 +9,22 @@ import {
   Plus,
   QrCode,
   Sparkles,
+  Download,
+  Edit,
 } from 'lucide-react'
 import type { EventItem, EventAnalyticsData, UserProfile } from '../types'
 import api from '../api'
 import CreateEventModal from '../components/CreateEventModal'
 import QRScannerModal from '../components/QRScannerModal'
+import EditEventModal from '../components/EditEventModal'
+import { useToast } from '../components/Toast'
 
 interface OrganizerPageProps {
   user: UserProfile | null
 }
 
 export default function OrganizerPage({ user }: OrganizerPageProps) {
+  const { showToast } = useToast()
   const isOrganizer = Boolean(
     user?.is_superuser ||
       user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
@@ -30,6 +35,7 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
   const [loading, setLoading] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isScanOpen, setIsScanOpen] = useState(false)
+  const [selectedEventForEdit, setSelectedEventForEdit] = useState<EventItem | null>(null)
 
   // Direct quick scan input
   const [quickToken, setQuickToken] = useState('')
@@ -90,6 +96,49 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
     ? Math.round((totalCheckedIn / totalRegistrations) * 100)
     : 0
 
+  function exportCSV() {
+    if (events.length === 0) return
+    const headers = [
+      'Event ID',
+      'Event Title',
+      'Status',
+      'Venue',
+      'Starts At',
+      'Capacity',
+      'Registrations',
+      'Checked In',
+      'Attendance Rate (%)',
+    ]
+    const rows = events.map((ev) => {
+      const a = analyticsMap[ev.id]
+      return [
+        ev.id,
+        `"${ev.title.replace(/"/g, '""')}"`,
+        ev.status,
+        `"${ev.venue.replace(/"/g, '""')}"`,
+        ev.starts_at,
+        ev.capacity ?? 'Unlimited',
+        a?.registrations ?? 0,
+        a?.checked_in ?? 0,
+        a?.attendance_rate_percent ?? 0,
+      ]
+    })
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute(
+      'download',
+      `swahilipot-events-report-${new Date().toISOString().slice(0, 10)}.csv`,
+    )
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    showToast('Attendance report exported to CSV!')
+  }
+
   async function handleQuickScan(e: React.FormEvent) {
     e.preventDefault()
     if (!quickToken.trim()) return
@@ -137,11 +186,21 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
         <div className="header-actions">
           <button
             type="button"
+            className="btn-secondary"
+            onClick={exportCSV}
+            disabled={events.length === 0}
+            title="Export CSV attendance report"
+          >
+            <Download size={17} />
+            <span>Export CSV</span>
+          </button>
+          <button
+            type="button"
             className="btn-outline"
             onClick={() => setIsScanOpen(true)}
           >
             <QrCode size={18} />
-            <span>Open Ticket Scanner</span>
+            <span>Scan Ticket</span>
           </button>
           <button
             type="button"
@@ -265,6 +324,7 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
                   <th>Registrations</th>
                   <th>Checked In</th>
                   <th>Attendance Rate</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -318,6 +378,17 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
                           <span className="progress-label">{rate}%</span>
                         </div>
                       </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-icon-table"
+                          onClick={() => setSelectedEventForEdit(ev)}
+                          title="Edit Event"
+                        >
+                          <Edit size={15} />
+                          <span>Edit</span>
+                        </button>
+                      </td>
                     </tr>
                   )
                 })}
@@ -330,12 +401,27 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
       <CreateEventModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        onCreated={loadOrganizerData}
+        onCreated={() => {
+          loadOrganizerData()
+          showToast('Event created successfully!')
+        }}
+      />
+      <EditEventModal
+        event={selectedEventForEdit}
+        isOpen={Boolean(selectedEventForEdit)}
+        onClose={() => setSelectedEventForEdit(null)}
+        onUpdated={() => {
+          loadOrganizerData()
+          showToast('Event updated successfully!')
+        }}
       />
       <QRScannerModal
         isOpen={isScanOpen}
         onClose={() => setIsScanOpen(false)}
-        onSuccess={loadOrganizerData}
+        onSuccess={() => {
+          loadOrganizerData()
+          showToast('Ticket check-in processed!')
+        }}
       />
     </div>
   )

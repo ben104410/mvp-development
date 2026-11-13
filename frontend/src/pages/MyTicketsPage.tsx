@@ -10,11 +10,14 @@ import {
   Copy,
   Check,
   MessageSquare,
+  Printer,
 } from 'lucide-react'
 import type { EventRegistrationItem } from '../types'
 import api from '../api'
+import { useToast } from '../components/Toast'
 
 export default function MyTicketsPage() {
+  const { showToast } = useToast()
   const [registrations, setRegistrations] = useState<EventRegistrationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
@@ -36,19 +39,45 @@ export default function MyTicketsPage() {
   function handleCopy(token: string) {
     navigator.clipboard.writeText(token)
     setCopiedToken(token)
+    showToast('Ticket QR token copied to clipboard!', 'info')
     setTimeout(() => setCopiedToken(null), 2000)
   }
 
+  function handlePrint() {
+    window.print()
+  }
+
+  function getDaysRemaining(dateString: string) {
+    const diff = new Date(dateString).getTime() - Date.now()
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+    if (days < 0) return 'Event concluded'
+    if (days === 0) return 'Happening today!'
+    if (days === 1) return 'Tomorrow'
+    return `In ${days} days`
+  }
+
   return (
-    <div className="page-container">
-      <div className="page-header">
+    <div className="page-container printable-area">
+      <div className="page-header no-print">
         <div>
-          <span className="page-sub">My Passes</span>
+          <span className="page-sub">Verified Passes</span>
           <h1 className="page-title">My Event Tickets</h1>
           <p className="page-desc">
-            Present your QR code ticket at the entrance for quick check-in.
+            Present your QR code ticket at the entrance for instant check-in.
           </p>
         </div>
+
+        {registrations.length > 0 && (
+          <button
+            type="button"
+            className="btn-outline"
+            onClick={handlePrint}
+            title="Print or Save as PDF"
+          >
+            <Printer size={17} />
+            <span>Print Passes</span>
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -79,20 +108,24 @@ export default function MyTicketsPage() {
               hour: '2-digit',
               minute: '2-digit',
             })
+            const countdown = getDaysRemaining(reg.event_starts_at)
 
             return (
               <div key={reg.id} className="ticket-card">
                 <div className="ticket-main">
                   <div className="ticket-status-row">
-                    {reg.checked_in ? (
-                      <span className="badge badge-success">
-                        <CheckCircle size={14} /> Checked In
-                      </span>
-                    ) : (
-                      <span className="badge badge-primary">
-                        <Clock size={14} /> Valid / Ready to Scan
-                      </span>
-                    )}
+                    <div className="ticket-badges">
+                      {reg.checked_in ? (
+                        <span className="badge badge-success">
+                          <CheckCircle size={14} /> Checked In
+                        </span>
+                      ) : (
+                        <span className="badge badge-primary">
+                          <Clock size={14} /> Active Pass
+                        </span>
+                      )}
+                      <span className="countdown-pill">{countdown}</span>
+                    </div>
                     <span className="ticket-id">#{reg.id}</span>
                   </div>
 
@@ -111,7 +144,7 @@ export default function MyTicketsPage() {
                     </div>
                   </div>
 
-                  <div className="ticket-footer-actions">
+                  <div className="ticket-footer-actions no-print">
                     <Link
                       to={`/feedback?event=${reg.event}`}
                       className="btn-text-link"
@@ -142,7 +175,7 @@ export default function MyTicketsPage() {
 
                   <button
                     type="button"
-                    className="btn-copy-token"
+                    className="btn-copy-token no-print"
                     onClick={() => handleCopy(reg.qr_token)}
                     title="Copy QR token string"
                   >

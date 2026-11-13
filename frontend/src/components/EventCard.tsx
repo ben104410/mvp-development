@@ -8,6 +8,7 @@ interface EventCardProps {
   isRegistered: boolean
   user: UserProfile | null
   onRegisteredSuccess: () => void
+  onViewDetails?: (event: EventItem) => void
 }
 
 export default function EventCard({
@@ -15,6 +16,7 @@ export default function EventCard({
   isRegistered,
   user,
   onRegisteredSuccess,
+  onViewDetails,
 }: EventCardProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -34,7 +36,8 @@ export default function EventCard({
   })
   const formattedTime = `${startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 
-  async function handleRegister() {
+  async function handleRegister(e: React.MouseEvent) {
+    e.stopPropagation()
     setError('')
     setLoading(true)
     try {
@@ -59,7 +62,17 @@ export default function EventCard({
   }
 
   return (
-    <article className="event-card">
+    <article
+      className="event-card interactive-card"
+      onClick={() => onViewDetails?.(event)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onViewDetails?.(event)
+        }
+      }}
+    >
       <div className="event-card-header">
         <div className="event-date-badge">
           <span className="month">
@@ -101,6 +114,7 @@ export default function EventCard({
               target="_blank"
               rel="noopener noreferrer"
               className="livestream-link"
+              onClick={(e) => e.stopPropagation()}
             >
               Watch Livestream
             </a>
@@ -111,6 +125,8 @@ export default function EventCard({
       {error && <p className="card-error">{error}</p>}
 
       <div className="event-card-footer">
+        <span className="view-details-hint">Click for details →</span>
+
         {isRegistered ? (
           <div className="registered-pill">
             <CheckCircle2 size={16} />
@@ -125,7 +141,7 @@ export default function EventCard({
             onClick={handleRegister}
             disabled={loading || event.status !== 'published'}
           >
-            {loading ? 'Registering...' : 'Register for Event'}
+            {loading ? 'Registering...' : 'Register'}
           </button>
         )}
       </div>

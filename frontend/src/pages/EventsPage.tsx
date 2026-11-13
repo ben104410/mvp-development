@@ -1,22 +1,37 @@
 import { useState, useEffect } from 'react'
-import { Search, Plus, QrCode, Sparkles } from 'lucide-react'
+import {
+  Search,
+  Plus,
+  QrCode,
+  Sparkles,
+  Compass,
+} from 'lucide-react'
 import type { EventItem, EventRegistrationItem, UserProfile } from '../types'
 import api from '../api'
 import EventCard from '../components/EventCard'
 import CreateEventModal from '../components/CreateEventModal'
 import QRScannerModal from '../components/QRScannerModal'
+import EventDetailsModal from '../components/EventDetailsModal'
+import EditEventModal from '../components/EditEventModal'
+import { useToast } from '../components/Toast'
 
 interface EventsPageProps {
   user: UserProfile | null
 }
 
 export default function EventsPage({ user }: EventsPageProps) {
+  const { showToast } = useToast()
   const [events, setEvents] = useState<EventItem[]>([])
   const [myRegistrations, setMyRegistrations] = useState<EventRegistrationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [timeFilter, setTimeFilter] = useState<'all' | 'upcoming' | 'past'>('all')
+
+  // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isScanOpen, setIsScanOpen] = useState(false)
+  const [selectedEventForDetails, setSelectedEventForDetails] = useState<EventItem | null>(null)
+  const [selectedEventForEdit, setSelectedEventForEdit] = useState<EventItem | null>(null)
 
   const isOrganizer = Boolean(
     user?.is_superuser ||
@@ -49,24 +64,68 @@ export default function EventsPage({ user }: EventsPageProps) {
       .map((r) => r.event),
   )
 
-  const filteredEvents = events.filter((ev) => {
-    const q = search.toLowerCase()
-    return (
-      ev.title.toLowerCase().includes(q) ||
-      ev.venue.toLowerCase().includes(q) ||
-      ev.description.toLowerCase().includes(q)
-    )
-  })
+  const now = new Date().getTime()
+  const filteredEvents = events
+    .filter((ev) => {
+      const q = search.toLowerCase()
+      const matchesSearch =
+        ev.title.toLowerCase().includes(q) ||
+        ev.venue.toLowerCase().includes(q) ||
+        ev.description.toLowerCase().includes(q)
+
+      if (!matchesSearch) return false
+
+      const endMs = new Date(ev.ends_at).getTime()
+      if (timeFilter === 'upcoming') {
+        return endMs >= now
+      }
+      if (timeFilter === 'past') {
+        return endMs < now
+      }
+      return true
+    })
 
   return (
     <div className="page-container">
+      {/* Hero Welcome Banner */}
+      <section className="hero-banner">
+        <div className="hero-content">
+          <div className="hero-pill">
+            <Compass size={14} />
+            <span>Swahilipot Smart Hub • Technology, Youth & Arts</span>
+          </div>
+          <h1 className="hero-headline">
+            Where Community, Innovation & Culture Converge
+          </h1>
+          <p className="hero-subtext">
+            Discover upcoming workshops, hackathons, open mic nights, and community
+            meetups. Register in seconds and access your verified digital passes.
+          </p>
+
+          <div className="hero-stats">
+            <div className="stat-item">
+              <span className="stat-num">{events.length}</span>
+              <span className="stat-desc">Community Events</span>
+            </div>
+            <div className="stat-divider" />
+            <div className="stat-item">
+              <span className="stat-num">{myRegistrations.length}</span>
+              <span className="stat-desc">My Passes Booked</span>
+            </div>
+            <div className="stat-divider" />
+            <div className="stat-item">
+              <span className="stat-num">Free</span>
+              <span className="stat-desc">Community Access</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Events Header */}
       <div className="page-header">
         <div>
-          <span className="page-sub">Community Hub</span>
-          <h1 className="page-title">Explore Events & Activities</h1>
-          <p className="page-desc">
-            Discover workshops, hackathons, and gatherings at Swahilipot Hub.
-          </p>
+          <span className="page-sub">Event Directory</span>
+          <h2 className="section-heading">Browse All Activities</h2>
         </div>
 
         {isOrganizer && (
@@ -91,22 +150,47 @@ export default function EventsPage({ user }: EventsPageProps) {
         )}
       </div>
 
-      <div className="filter-bar">
+      {/* Search and Time Filters */}
+      <div className="directory-filters">
         <div className="search-box">
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search by event title, venue, or keyword..."
+            placeholder="Search by title, venue, or keyword..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+
+        <div className="time-filters">
+          <button
+            type="button"
+            className={`filter-chip ${timeFilter === 'all' ? 'active' : ''}`}
+            onClick={() => setTimeFilter('all')}
+          >
+            All Events ({events.length})
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${timeFilter === 'upcoming' ? 'active' : ''}`}
+            onClick={() => setTimeFilter('upcoming')}
+          >
+            Upcoming
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${timeFilter === 'past' ? 'active' : ''}`}
+            onClick={() => setTimeFilter('past')}
+          >
+            Past Events
+          </button>
         </div>
       </div>
 
       {loading ? (
         <div className="loading-state">
           <div className="spinner" />
-          <p>Loading events...</p>
+          <p>Loading community events...</p>
         </div>
       ) : filteredEvents.length === 0 ? (
         <div className="empty-state">
@@ -114,10 +198,12 @@ export default function EventsPage({ user }: EventsPageProps) {
           <h3>No events found</h3>
           <p>
             {search
-              ? 'Try adjusting your search terms.'
-              : isOrganizer
-                ? 'Get started by creating your first event!'
-                : 'Check back soon for new community activities.'}
+              ? 'No events match your current search criteria.'
+              : timeFilter !== 'all'
+                ? `No events found for the "${timeFilter}" filter.`
+                : isOrganizer
+                  ? 'Get started by creating your first community event!'
+                  : 'Check back soon for upcoming gatherings.'}
           </p>
           {isOrganizer && !search && (
             <button
@@ -125,7 +211,7 @@ export default function EventsPage({ user }: EventsPageProps) {
               className="btn-primary"
               onClick={() => setIsCreateOpen(true)}
             >
-              <Plus size={18} /> Create First Event
+              <Plus size={18} /> Create Event
             </button>
           )}
         </div>
@@ -137,23 +223,59 @@ export default function EventsPage({ user }: EventsPageProps) {
               event={event}
               isRegistered={registeredEventIds.has(event.id)}
               user={user}
-              onRegisteredSuccess={fetchData}
+              onRegisteredSuccess={() => {
+                fetchData()
+                showToast(`🎉 You're registered for "${event.title}"!`)
+              }}
+              onViewDetails={(ev) => setSelectedEventForDetails(ev)}
             />
           ))}
         </div>
       )}
+
+      {/* Modals */}
+      <EventDetailsModal
+        event={selectedEventForDetails}
+        isOpen={Boolean(selectedEventForDetails)}
+        isRegistered={Boolean(
+          selectedEventForDetails && registeredEventIds.has(selectedEventForDetails.id),
+        )}
+        user={user}
+        onClose={() => setSelectedEventForDetails(null)}
+        onRegisterSuccess={() => {
+          fetchData()
+          showToast(`🎉 Registration confirmed for "${selectedEventForDetails?.title}"!`)
+          setSelectedEventForDetails(null)
+        }}
+        onEditRequest={(ev) => setSelectedEventForEdit(ev)}
+      />
 
       {isOrganizer && (
         <>
           <CreateEventModal
             isOpen={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
-            onCreated={fetchData}
+            onCreated={() => {
+              fetchData()
+              showToast('✨ New event published successfully!')
+            }}
+          />
+          <EditEventModal
+            event={selectedEventForEdit}
+            isOpen={Boolean(selectedEventForEdit)}
+            onClose={() => setSelectedEventForEdit(null)}
+            onUpdated={() => {
+              fetchData()
+              showToast('Event updated successfully!')
+            }}
           />
           <QRScannerModal
             isOpen={isScanOpen}
             onClose={() => setIsScanOpen(false)}
-            onSuccess={fetchData}
+            onSuccess={() => {
+              fetchData()
+              showToast('Check-in recorded!')
+            }}
           />
         </>
       )}
