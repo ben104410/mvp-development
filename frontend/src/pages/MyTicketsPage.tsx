@@ -12,6 +12,8 @@ import {
   MessageSquare,
   Printer,
   Maximize2,
+  WifiOff,
+  Search,
 } from 'lucide-react'
 import type { EventRegistrationItem } from '../types'
 import api from '../api'
@@ -24,19 +26,50 @@ export default function MyTicketsPage() {
   const [loading, setLoading] = useState(true)
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
   const [selectedPass, setSelectedPass] = useState<EventRegistrationItem | null>(null)
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'checked'>('all')
 
   useEffect(() => {
     async function fetchTickets() {
       try {
         const res = await api.get<EventRegistrationItem[]>('/mine/')
         setRegistrations(res.data)
+        localStorage.setItem(
+          'swahilipot_cached_tickets',
+          JSON.stringify(res.data),
+        )
+        setIsOffline(false)
       } catch {
-        // Handled silently
+        const cached = localStorage.getItem('swahilipot_cached_tickets')
+        if (cached) {
+          try {
+            setRegistrations(JSON.parse(cached))
+            setIsOffline(true)
+          } catch {
+            // Handled silently
+          }
+        }
       } finally {
         setLoading(false)
       }
     }
+
     fetchTickets()
+
+    const handleOnline = () => {
+      setIsOffline(false)
+      fetchTickets()
+    }
+    const handleOffline = () => setIsOffline(true)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
   }, [])
 
   function handleCopy(token: string) {
@@ -58,6 +91,20 @@ export default function MyTicketsPage() {
     if (days === 1) return 'Tomorrow'
     return `In ${days} days`
   }
+
+  const filteredRegistrations = registrations.filter((reg) => {
+    const q = search.toLowerCase()
+    const matchesSearch =
+      reg.event_title.toLowerCase().includes(q) ||
+      reg.event_venue.toLowerCase().includes(q)
+
+    if (!matchesSearch) return false
+
+    if (statusFilter === 'active' && reg.checked_in) return false
+    if (statusFilter === 'checked' && !reg.checked_in) return false
+
+    return true
+  })
 
   return (
     <div className="page-container printable-area">
@@ -83,6 +130,57 @@ export default function MyTicketsPage() {
         )}
       </div>
 
+      {isOffline && (
+        <div className="offline-cached-banner no-print">
+          <WifiOff size={18} className="offline-icon" />
+          <div className="offline-text">
+            <strong>Offline Mode Active</strong>
+            <p>
+              Displaying passes cached on your device. Entrance scanners can still
+              validate these QR codes without active mobile data.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {registrations.length > 0 && (
+        <div className="tickets-controls-bar no-print">
+          <div className="search-box ticket-search-box">
+            <Search size={16} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search my tickets by event or venue..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="time-filters">
+            <button
+              type="button"
+              className={`filter-chip ${statusFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('all')}
+            >
+              All Passes ({registrations.length})
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${statusFilter === 'active' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('active')}
+            >
+              Active Passes ({registrations.filter((r) => !r.checked_in).length})
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${statusFilter === 'checked' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('checked')}
+            >
+              Checked In ({registrations.filter((r) => r.checked_in).length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="loading-state">
           <div className="spinner" />
@@ -97,9 +195,25 @@ export default function MyTicketsPage() {
             Explore Events
           </Link>
         </div>
+      ) : filteredRegistrations.length === 0 ? (
+        <div className="empty-state">
+          <Ticket size={42} className="empty-icon" />
+          <h3>No matching tickets</h3>
+          <p>No tickets match your filter criteria.</p>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              setSearch('')
+              setStatusFilter('all')
+            }}
+          >
+            Clear Filters
+          </button>
+        </div>
       ) : (
         <div className="tickets-list">
-          {registrations.map((reg) => {
+          {filteredRegistrations.map((reg) => {
             const date = new Date(reg.event_starts_at)
             const formattedDate = date.toLocaleDateString(undefined, {
               weekday: 'short',

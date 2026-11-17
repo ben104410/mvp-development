@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import {
   ShieldCheck,
   Calendar,
@@ -11,6 +11,11 @@ import {
   Sparkles,
   Download,
   Edit,
+  Search,
+  BarChart3,
+  X,
+  RefreshCw,
+  MessageSquare,
 } from 'lucide-react'
 import type { EventItem, EventAnalyticsData, UserProfile } from '../types'
 import api from '../api'
@@ -36,6 +41,11 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isScanOpen, setIsScanOpen] = useState(false)
   const [selectedEventForEdit, setSelectedEventForEdit] = useState<EventItem | null>(null)
+  const [selectedEventForAnalytics, setSelectedEventForAnalytics] = useState<EventItem | null>(null)
+
+  // Filters for analytics table
+  const [tableSearch, setTableSearch] = useState('')
+  const [tableStatusFilter, setTableStatusFilter] = useState<'all' | 'published' | 'draft' | 'completed' | 'cancelled'>('all')
 
   // Direct quick scan input
   const [quickToken, setQuickToken] = useState('')
@@ -297,8 +307,69 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
       {/* Event Analytics Table */}
       <div className="analytics-section">
         <div className="section-header">
-          <h2>Event Attendance & Capacity Analytics</h2>
+          <div>
+            <h2>Event Attendance & Capacity Analytics</h2>
+            <p className="section-subtext">
+              Real-time attendance rates, check-in counts, and capacity utilization.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="btn-outline btn-refresh"
+            onClick={loadOrganizerData}
+            disabled={loading}
+            title="Reload latest statistics"
+          >
+            <RefreshCw size={15} className={loading ? 'spin' : ''} />
+            <span>Refresh</span>
+          </button>
         </div>
+
+        {events.length > 0 && (
+          <div className="analytics-filter-bar">
+            <div className="search-box table-search-box">
+              <Search size={16} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search events by title or venue..."
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="time-filters">
+              <button
+                type="button"
+                className={`filter-chip ${tableStatusFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setTableStatusFilter('all')}
+              >
+                All Statuses ({events.length})
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${tableStatusFilter === 'published' ? 'active' : ''}`}
+                onClick={() => setTableStatusFilter('published')}
+              >
+                Published
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${tableStatusFilter === 'completed' ? 'active' : ''}`}
+                onClick={() => setTableStatusFilter('completed')}
+              >
+                Completed
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${tableStatusFilter === 'draft' ? 'active' : ''}`}
+                onClick={() => setTableStatusFilter('draft')}
+              >
+                Drafts
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="loading-state">
@@ -328,75 +399,248 @@ export default function OrganizerPage({ user }: OrganizerPageProps) {
                 </tr>
               </thead>
               <tbody>
-                {events.map((ev) => {
-                  const stat = analyticsMap[ev.id]
-                  const regCount = stat?.registrations ?? 0
-                  const checkedCount = stat?.checked_in ?? 0
-                  const rate = stat?.attendance_rate_percent ?? 0
-                  const cap = ev.capacity
+                {events
+                  .filter((ev) => {
+                    const q = tableSearch.toLowerCase()
+                    const matches =
+                      ev.title.toLowerCase().includes(q) ||
+                      ev.venue.toLowerCase().includes(q)
+                    if (!matches) return false
+                    if (
+                      tableStatusFilter !== 'all' &&
+                      ev.status !== tableStatusFilter
+                    ) {
+                      return false
+                    }
+                    return true
+                  })
+                  .map((ev) => {
+                    const stat = analyticsMap[ev.id]
+                    const regCount = stat?.registrations ?? 0
+                    const checkedCount = stat?.checked_in ?? 0
+                    const rate = stat?.attendance_rate_percent ?? 0
+                    const cap = ev.capacity
 
-                  return (
-                    <tr key={ev.id}>
-                      <td className="event-name-cell">
-                        <strong>{ev.title}</strong>
-                      </td>
-                      <td>
-                        <span className={`badge badge-${ev.status}`}>
-                          {ev.status}
-                        </span>
-                      </td>
-                      <td className="date-cell">
-                        {new Date(ev.starts_at).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </td>
-                      <td className="venue-cell">{ev.venue}</td>
-                      <td>{cap ? cap : 'Unlimited'}</td>
-                      <td>
-                        <strong>{regCount}</strong>
-                        {cap && (
-                          <span className="cap-percent">
-                            {' '}
-                            ({Math.round((regCount / cap) * 100)}%)
+                    return (
+                      <tr key={ev.id}>
+                        <td className="event-name-cell">
+                          <button
+                            type="button"
+                            className="btn-table-event-name"
+                            onClick={() => setSelectedEventForAnalytics(ev)}
+                            title="View detailed attendance stats"
+                          >
+                            <strong>{ev.title}</strong>
+                          </button>
+                        </td>
+                        <td>
+                          <span className={`badge badge-${ev.status}`}>
+                            {ev.status}
                           </span>
-                        )}
-                      </td>
-                      <td>
-                        <span className="checked-cell">
-                          <CheckCircle2 size={14} /> {checkedCount}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="progress-cell">
-                          <div className="progress-track">
-                            <div
-                              className="progress-fill"
-                              style={{ width: `${Math.min(rate, 100)}%` }}
-                            />
+                        </td>
+                        <td className="date-cell">
+                          {new Date(ev.starts_at).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </td>
+                        <td className="venue-cell">{ev.venue}</td>
+                        <td>{cap ? cap : 'Unlimited'}</td>
+                        <td>
+                          <strong>{regCount}</strong>
+                          {cap && (
+                            <span className="cap-percent">
+                              {' '}
+                              ({Math.round((regCount / cap) * 100)}%)
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="checked-cell">
+                            <CheckCircle2 size={14} /> {checkedCount}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="progress-cell">
+                            <div className="progress-track">
+                              <div
+                                className="progress-fill"
+                                style={{ width: `${Math.min(rate, 100)}%` }}
+                              />
+                            </div>
+                            <span className="progress-label">{rate}%</span>
                           </div>
-                          <span className="progress-label">{rate}%</span>
-                        </div>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="btn-icon-table"
-                          onClick={() => setSelectedEventForEdit(ev)}
-                          title="Edit Event"
-                        >
-                          <Edit size={15} />
-                          <span>Edit</span>
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
+                        </td>
+                        <td>
+                          <div className="table-actions-group">
+                            <button
+                              type="button"
+                              className="btn-icon-table"
+                              onClick={() => setSelectedEventForAnalytics(ev)}
+                              title="Inspect Attendance Breakdown"
+                            >
+                              <BarChart3 size={15} />
+                              <span>Stats</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-icon-table"
+                              onClick={() => setSelectedEventForEdit(ev)}
+                              title="Edit Event"
+                            >
+                              <Edit size={15} />
+                              <span>Edit</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {/* Attendance Detail Breakdown Modal */}
+      {selectedEventForAnalytics && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setSelectedEventForAnalytics(null)}
+        >
+          <div
+            className="modal-card modal-analytics-breakdown"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div className="modal-title-wrap">
+                <span className="modal-sub">Attendance Breakdown</span>
+                <h2>{selectedEventForAnalytics.title}</h2>
+              </div>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setSelectedEventForAnalytics(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="breakdown-body">
+              {(() => {
+                const stat = analyticsMap[selectedEventForAnalytics.id]
+                const regs = stat?.registrations ?? 0
+                const checked = stat?.checked_in ?? 0
+                const pending = stat?.not_checked_in ?? (regs - checked)
+                const rate = stat?.attendance_rate_percent ?? 0
+                const cap = selectedEventForAnalytics.capacity
+                const capRate = cap ? Math.round((regs / cap) * 100) : null
+
+                return (
+                  <>
+                    <div className="breakdown-kpis">
+                      <div className="breakdown-kpi-item">
+                        <span className="bkpi-val">{regs}</span>
+                        <span className="bkpi-label">Registered Attendees</span>
+                      </div>
+                      <div className="breakdown-kpi-item">
+                        <span className="bkpi-val text-green">{checked}</span>
+                        <span className="bkpi-label">Checked In</span>
+                      </div>
+                      <div className="breakdown-kpi-item">
+                        <span className="bkpi-val text-amber">{pending}</span>
+                        <span className="bkpi-label">Awaiting Entrance</span>
+                      </div>
+                      <div className="breakdown-kpi-item">
+                        <span className="bkpi-val text-blue">{rate}%</span>
+                        <span className="bkpi-label">Attendance Rate</span>
+                      </div>
+                    </div>
+
+                    <div className="breakdown-visual-section">
+                      <h3>Gate Check-In Progress</h3>
+                      <div className="breakdown-bar-track">
+                        <div
+                          className="breakdown-bar-fill fill-checked"
+                          style={{ width: `${regs ? (checked / regs) * 100 : 0}%` }}
+                          title={`Checked in: ${checked}`}
+                        />
+                        <div
+                          className="breakdown-bar-fill fill-pending"
+                          style={{ width: `${regs ? (pending / regs) * 100 : 0}%` }}
+                          title={`Pending: ${pending}`}
+                        />
+                      </div>
+                      <div className="breakdown-legend">
+                        <span className="legend-item">
+                          <span className="legend-dot dot-green" /> Checked In ({checked})
+                        </span>
+                        <span className="legend-item">
+                          <span className="legend-dot dot-amber" /> Pending Arrival ({pending})
+                        </span>
+                      </div>
+                    </div>
+
+                    {cap && (
+                      <div className="breakdown-visual-section">
+                        <h3>Venue Capacity ({regs} of {cap} spots)</h3>
+                        <div className="breakdown-bar-track">
+                          <div
+                            className="breakdown-bar-fill fill-capacity"
+                            style={{ width: `${Math.min(capRate ?? 0, 100)}%` }}
+                          />
+                        </div>
+                        <div className="breakdown-legend">
+                          <span className="legend-item">
+                            {capRate}% Booked • {Math.max(cap - regs, 0)} spots remaining
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="breakdown-meta-list">
+                      <div className="bmeta-row">
+                        <Calendar size={15} />
+                        <span>
+                          {new Date(selectedEventForAnalytics.starts_at).toLocaleString([], {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
+                        </span>
+                      </div>
+                      <div className="bmeta-row">
+                        <Users size={15} />
+                        <span>Venue: {selectedEventForAnalytics.venue}</span>
+                      </div>
+                    </div>
+
+                    <div className="breakdown-actions">
+                      <Link
+                        to={`/feedback?event=${selectedEventForAnalytics.id}`}
+                        className="btn-secondary"
+                      >
+                        <MessageSquare size={15} />
+                        <span>View Event Feedback</span>
+                      </Link>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => {
+                          setSelectedEventForAnalytics(null)
+                          setIsScanOpen(true)
+                        }}
+                      >
+                        <QrCode size={16} />
+                        <span>Open Gate Scanner</span>
+                      </button>
+                    </div>
+                  </>
+                )
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       <CreateEventModal
         isOpen={isCreateOpen}

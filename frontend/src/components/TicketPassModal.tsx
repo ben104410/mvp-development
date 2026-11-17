@@ -1,6 +1,17 @@
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { X, CheckCircle, Clock, Copy, Check, Calendar, MapPin, User } from 'lucide-react'
+import {
+  X,
+  CheckCircle,
+  Clock,
+  Copy,
+  Check,
+  Calendar,
+  MapPin,
+  User,
+  Printer,
+  Share2,
+} from 'lucide-react'
 import type { EventRegistrationItem } from '../types'
 
 interface TicketPassModalProps {
@@ -17,6 +28,7 @@ export default function TicketPassModal({
   username,
 }: TicketPassModalProps) {
   const [copied, setCopied] = useState(false)
+  const [shared, setShared] = useState(false)
 
   if (!isOpen || !registration) return null
 
@@ -39,13 +51,34 @@ export default function TicketPassModal({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function handlePrint() {
+    window.print()
+  }
+
+  function handleShare() {
+    if (!registration) return
+    const shareText = `🎟️ Swahilipot Hub Pass: ${registration.event_title} on ${formattedDate} at ${registration.event_venue}. Ticket #${registration.id}`
+    if (navigator.share) {
+      navigator
+        .share({
+          title: `${registration.event_title} - Entry Pass`,
+          text: shareText,
+        })
+        .catch(() => {})
+    } else {
+      navigator.clipboard.writeText(shareText)
+      setShared(true)
+      setTimeout(() => setShared(false), 2000)
+    }
+  }
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-card modal-ticket-pass"
+        className="modal-card modal-ticket-pass printable-pass-card"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="pass-modal-header">
+        <div className="pass-modal-header no-print">
           <span className="pass-brand">Swahilipot Hub • Official Pass</span>
           <button type="button" className="btn-close" onClick={onClose}>
             <X size={18} />
@@ -98,7 +131,7 @@ export default function TicketPassModal({
             </span>
           </div>
 
-          <div className="pass-token-copy-box">
+          <div className="pass-token-copy-box no-print">
             <span className="pass-token-text">{registration.qr_token}</span>
             <button
               type="button"
@@ -108,6 +141,27 @@ export default function TicketPassModal({
             >
               {copied ? <Check size={14} /> : <Copy size={14} />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
+            </button>
+          </div>
+
+          <div className="pass-footer-actions no-print">
+            <button
+              type="button"
+              className="btn-outline pass-action-btn"
+              onClick={handlePrint}
+              title="Print pass or save as PDF"
+            >
+              <Printer size={15} />
+              <span>Print Pass</span>
+            </button>
+            <button
+              type="button"
+              className="btn-outline pass-action-btn"
+              onClick={handleShare}
+              title="Share ticket information"
+            >
+              {shared ? <Check size={15} /> : <Share2 size={15} />}
+              <span>{shared ? 'Details Copied!' : 'Share Pass'}</span>
             </button>
           </div>
         </div>

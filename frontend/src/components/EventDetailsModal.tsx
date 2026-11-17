@@ -10,6 +10,7 @@ import {
   Share2,
   Check,
   Play,
+  Download,
 } from 'lucide-react'
 import type { EventItem, UserProfile } from '../types'
 import api from '../api'
@@ -86,6 +87,45 @@ export default function EventDetailsModal({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
+  }
+
+  function handleDownloadICS() {
+    if (!event) return
+    const formatICSDate = (d: Date) => d.toISOString().replace(/-|:|\.\d\d\d/g, '')
+    const start = formatICSDate(startDate)
+    const end = formatICSDate(endDate)
+    const now = formatICSDate(new Date())
+
+    const clean = (str: string) => str.replace(/\r?\n/g, '\\n').replace(/[,;]/g, ' ')
+
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Swahilipot Hub//Smart Track//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:swahilipot-event-${event.id}-${Date.now()}@swahilipothub.co.ke`,
+      `DTSTAMP:${now}`,
+      `DTSTART:${start}`,
+      `DTEND:${end}`,
+      `SUMMARY:${clean(event.title)}`,
+      `DESCRIPTION:${clean(event.description)}`,
+      `LOCATION:${clean(event.venue)}, Swahilipot Hub, Mombasa`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n')
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${event.slug || `swahilipot-event-${event.id}`}.ics`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -177,8 +217,18 @@ export default function EventDetailsModal({
                 title="Add to Google Calendar"
               >
                 <CalendarPlus size={16} />
-                <span>Add to Calendar</span>
+                <span>Google Cal</span>
               </a>
+
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleDownloadICS}
+                title="Download .ics for Apple Calendar, Outlook, or Phone Calendar"
+              >
+                <Download size={16} />
+                <span>Save .ics</span>
+              </button>
 
               <button
                 type="button"

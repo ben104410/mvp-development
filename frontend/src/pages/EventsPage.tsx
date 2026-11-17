@@ -7,6 +7,9 @@ import {
   Compass,
   LayoutGrid,
   Calendar,
+  RotateCcw,
+  MapPin,
+  ArrowUpDown,
 } from 'lucide-react'
 import type { EventItem, EventRegistrationItem, UserProfile } from '../types'
 import api from '../api'
@@ -30,6 +33,8 @@ export default function EventsPage({ user }: EventsPageProps) {
   const [search, setSearch] = useState('')
   const [timeFilter, setTimeFilter] = useState<'all' | 'upcoming' | 'past'>('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [venueFilter, setVenueFilter] = useState('all')
+  const [sortBy, setSortBy] = useState<'date-asc' | 'date-desc' | 'title-asc' | 'capacity-desc'>('date-asc')
   const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid')
 
   const categories = [
@@ -78,6 +83,25 @@ export default function EventsPage({ user }: EventsPageProps) {
       .map((r) => r.event),
   )
 
+  const venues = Array.from(
+    new Set(events.map((e) => e.venue?.trim()).filter(Boolean)),
+  ).sort()
+
+  const hasActiveFilters =
+    Boolean(search) ||
+    timeFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    venueFilter !== 'all' ||
+    sortBy !== 'date-asc'
+
+  function resetFilters() {
+    setSearch('')
+    setTimeFilter('all')
+    setCategoryFilter('all')
+    setVenueFilter('all')
+    setSortBy('date-asc')
+  }
+
   const now = new Date().getTime()
   const filteredEvents = events
     .filter((ev) => {
@@ -106,8 +130,28 @@ export default function EventsPage({ user }: EventsPageProps) {
         }
       }
 
+      if (venueFilter !== 'all' && ev.venue?.trim() !== venueFilter) {
+        return false
+      }
+
       return true
     })
+
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
+    if (sortBy === 'date-asc') {
+      return new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
+    }
+    if (sortBy === 'date-desc') {
+      return new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime()
+    }
+    if (sortBy === 'title-asc') {
+      return a.title.localeCompare(b.title)
+    }
+    if (sortBy === 'capacity-desc') {
+      return (b.capacity ?? 0) - (a.capacity ?? 0)
+    }
+    return 0
+  })
 
   return (
     <div className="page-container">
@@ -246,12 +290,76 @@ export default function EventsPage({ user }: EventsPageProps) {
         ))}
       </div>
 
+      {/* Refinement & Sorting Strip */}
+      <div className="events-refinement-bar">
+        <div className="refinement-controls">
+          <div className="refinement-item">
+            <MapPin size={14} className="refinement-icon" />
+            <select
+              value={venueFilter}
+              onChange={(e) => setVenueFilter(e.target.value)}
+              className="refinement-select"
+              aria-label="Filter by venue"
+            >
+              <option value="all">All Venues</option>
+              {venues.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="refinement-item">
+            <ArrowUpDown size={14} className="refinement-icon" />
+            <select
+              value={sortBy}
+              onChange={(e) =>
+                setSortBy(
+                  e.target.value as
+                    | 'date-asc'
+                    | 'date-desc'
+                    | 'title-asc'
+                    | 'capacity-desc',
+                )
+              }
+              className="refinement-select"
+              aria-label="Sort events by"
+            >
+              <option value="date-asc">Date: Soonest First</option>
+              <option value="date-desc">Date: Latest First</option>
+              <option value="title-asc">Alphabetical (A - Z)</option>
+              <option value="capacity-desc">Capacity (High to Low)</option>
+            </select>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="btn-reset-filters"
+              onClick={resetFilters}
+              title="Reset all active search and filters"
+            >
+              <RotateCcw size={12} />
+              <span>Reset Filters</span>
+            </button>
+          )}
+        </div>
+
+        <div className="refinement-count">
+          <span>
+            Showing <strong>{sortedEvents.length}</strong> of{' '}
+            <strong>{events.length}</strong> events
+          </span>
+        </div>
+      </div>
+
       {loading ? (
         <div className="loading-state">
           <div className="spinner" />
           <p>Loading community events...</p>
         </div>
-      ) : filteredEvents.length === 0 ? (
+      ) : sortedEvents.length === 0 ? (
         <div className="empty-state">
           <Sparkles size={40} className="empty-icon" />
           <h3>No events found</h3>
@@ -260,11 +368,23 @@ export default function EventsPage({ user }: EventsPageProps) {
               ? 'No events match your current search criteria.'
               : timeFilter !== 'all'
                 ? `No events found for the "${timeFilter}" filter.`
-                : isOrganizer
-                  ? 'Get started by creating your first community event!'
-                  : 'Check back soon for upcoming gatherings.'}
+                : venueFilter !== 'all'
+                  ? `No events found at "${venueFilter}".`
+                  : isOrganizer
+                    ? 'Get started by creating your first community event!'
+                    : 'Check back soon for upcoming gatherings.'}
           </p>
-          {isOrganizer && !search && (
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={resetFilters}
+              style={{ marginTop: '8px' }}
+            >
+              <RotateCcw size={15} /> Reset All Filters
+            </button>
+          )}
+          {isOrganizer && !search && !hasActiveFilters && (
             <button
               type="button"
               className="btn-primary"
@@ -276,12 +396,12 @@ export default function EventsPage({ user }: EventsPageProps) {
         </div>
       ) : viewMode === 'calendar' ? (
         <EventCalendarView
-          events={filteredEvents}
+          events={sortedEvents}
           onSelectEvent={(ev) => setSelectedEventForDetails(ev)}
         />
       ) : (
         <div className="events-grid">
-          {filteredEvents.map((event) => (
+          {sortedEvents.map((event) => (
             <EventCard
               key={event.id}
               event={event}
