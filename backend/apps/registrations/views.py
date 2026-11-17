@@ -33,9 +33,19 @@ class RegisterForEventView(APIView):
     def post(self, request):
         user = request.user
 
-        if user.is_superuser or user.groups.filter(
-            name__in=("organizer", "admin")
-        ).exists():
+        if (
+            user.is_superuser
+            or user.is_staff
+            or user.groups.filter(
+                name__in=(
+                    "organizer",
+                    "admin",
+                    "administrator",
+                    "administrators",
+                    "staff",
+                )
+            ).exists()
+        ):
             raise ValidationError(
                 "Only attendee accounts can register for events."
             )

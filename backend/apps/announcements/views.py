@@ -22,7 +22,16 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
             user.is_authenticated
             and (
                 user.is_superuser
-                or user.groups.filter(name__in=("organizer", "admin")).exists()
+                or user.is_staff
+                or user.groups.filter(
+                    name__in=(
+                        "organizer",
+                        "admin",
+                        "administrator",
+                        "administrators",
+                        "staff",
+                    )
+                ).exists()
             )
         )
 

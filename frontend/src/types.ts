@@ -5,7 +5,25 @@ export interface UserProfile {
   first_name: string
   last_name: string
   groups: string[]
+  is_staff?: boolean
   is_superuser: boolean
+}
+
+export function isUserAdminOrOrganizer(user: UserProfile | null): boolean {
+  if (!user) return false
+  if (user.is_superuser || user.is_staff) return true
+  const adminGroups = [
+    'organizer',
+    'admin',
+    'administrator',
+    'administrators',
+    'staff',
+    'admins',
+    'organizers',
+  ]
+  return Boolean(
+    user.groups?.some((g) => adminGroups.includes(g.toLowerCase())),
+  )
 }
 
 export interface EventItem {

@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 class IsOrganizerOrAdmin(BasePermission):
-    """Allow event management to organizers, admins, and superusers."""
+    """Allow event management to organizers, admins, staff, and superusers."""
 
     def has_permission(self, request, view):
         user = request.user
@@ -11,7 +11,16 @@ class IsOrganizerOrAdmin(BasePermission):
             and user.is_authenticated
             and (
                 user.is_superuser
-                or user.groups.filter(name__in=('organizer', 'admin')).exists()
+                or user.is_staff
+                or user.groups.filter(
+                    name__in=(
+                        'organizer',
+                        'admin',
+                        'administrator',
+                        'administrators',
+                        'staff',
+                    )
+                ).exists()
             )
         )
 

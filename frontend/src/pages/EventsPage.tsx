@@ -12,6 +12,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react'
 import type { EventItem, EventRegistrationItem, UserProfile } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import api from '../api'
 import EventCard from '../components/EventCard'
 import CreateEventModal from '../components/CreateEventModal'
@@ -52,10 +53,7 @@ export default function EventsPage({ user }: EventsPageProps) {
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<EventItem | null>(null)
   const [selectedEventForEdit, setSelectedEventForEdit] = useState<EventItem | null>(null)
 
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   async function fetchData() {
     setLoading(true)
@@ -192,7 +190,12 @@ export default function EventsPage({ user }: EventsPageProps) {
       {/* Main Events Header */}
       <div className="page-header">
         <div>
-          <span className="page-sub">Event Directory</span>
+          <div className="page-header-title-row">
+            <span className="page-sub">Event Directory</span>
+            {isOrganizer && (
+              <span className="role-tag-header">Admin Access Enabled</span>
+            )}
+          </div>
           <h2 className="section-heading">Browse All Activities</h2>
         </div>
 
@@ -212,7 +215,7 @@ export default function EventsPage({ user }: EventsPageProps) {
               onClick={() => setIsCreateOpen(true)}
             >
               <Plus size={18} />
-              <span>Create Event</span>
+              <span>Add Event</span>
             </button>
           </div>
         )}

@@ -38,17 +38,63 @@ export default function CreateEventModal({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
+
+    if (!form.title.trim()) {
+      setError('Event title is required.')
+      return
+    }
+    if (!form.venue.trim()) {
+      setError('Venue location is required.')
+      return
+    }
+    if (!form.starts_at || !form.ends_at) {
+      setError('Please provide both start and end date/time.')
+      return
+    }
+
+    const startDate = new Date(form.starts_at)
+    const endDate = new Date(form.ends_at)
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      setError('Invalid date/time provided.')
+      return
+    }
+
+    if (endDate <= startDate) {
+      setError('The event end time must be after the start time.')
+      return
+    }
+
+    if (form.capacity && Number(form.capacity) <= 0) {
+      setError('Capacity must be greater than zero if specified.')
+      return
+    }
+
     setLoading(true)
 
     try {
       const payload = {
         ...form,
+        title: form.title.trim(),
+        venue: form.venue.trim(),
+        description: form.description.trim(),
+        livestream_url: form.livestream_url.trim(),
         capacity: form.capacity ? Number(form.capacity) : null,
-        starts_at: new Date(form.starts_at).toISOString(),
-        ends_at: new Date(form.ends_at).toISOString(),
+        starts_at: startDate.toISOString(),
+        ends_at: endDate.toISOString(),
       }
 
       await api.post('/events/', payload)
+      setForm({
+        title: '',
+        venue: '',
+        starts_at: '',
+        ends_at: '',
+        capacity: '',
+        livestream_url: '',
+        description: '',
+        status: 'published',
+      })
       onCreated()
       onClose()
     } catch (err: unknown) {
@@ -61,10 +107,10 @@ export default function CreateEventModal({
               .join(' | '),
           )
         } else {
-          setError('Failed to create event. Verify fields.')
+          setError('Failed to create event. Please verify all fields.')
         }
       } else {
-        setError('Network error.')
+        setError('Network error. Ensure backend is running.')
       }
     } finally {
       setLoading(false)

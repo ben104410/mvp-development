@@ -19,6 +19,7 @@ import type {
   AnnouncementItem,
   UserProfile,
 } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import api from '../api'
 import EventDetailsModal from '../components/EventDetailsModal'
 import { useToast } from '../components/Toast'
@@ -35,10 +36,7 @@ export default function DashboardPage({ user }: DashboardPageProps) {
   const [loading, setLoading] = useState(true)
   const [selectedEventForDetails, setSelectedEventForDetails] = useState<EventItem | null>(null)
 
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   async function loadHomeData() {
     setLoading(true)

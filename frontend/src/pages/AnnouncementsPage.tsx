@@ -10,6 +10,7 @@ import {
   User,
 } from 'lucide-react'
 import type { AnnouncementItem, NewsItem, UserProfile } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import api from '../api'
 import ArticleReaderModal from '../components/ArticleReaderModal'
 
@@ -42,10 +43,7 @@ export default function AnnouncementsPage({ user }: AnnouncementsPageProps) {
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
 
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   async function loadData() {
     setLoading(true)

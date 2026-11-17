@@ -20,9 +20,19 @@ class FeedbackViewSet(viewsets.ModelViewSet):
 
         queryset = Feedback.objects.select_related("user", "event")
 
-        if user.is_superuser or user.groups.filter(
-            name__in=("organizer", "admin")
-        ).exists():
+        if (
+            user.is_superuser
+            or user.is_staff
+            or user.groups.filter(
+                name__in=(
+                    "organizer",
+                    "admin",
+                    "administrator",
+                    "administrators",
+                    "staff",
+                )
+            ).exists()
+        ):
             event_id = self.request.query_params.get("event")
             if event_id:
                 queryset = queryset.filter(event_id=event_id)

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Star, MessageSquare, CheckCircle, Calendar, User } from 'lucide-react'
 import type { FeedbackItem, EventItem, UserProfile } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import api from '../api'
 
 interface FeedbackPageProps {
@@ -25,10 +26,7 @@ export default function FeedbackPage({ user }: FeedbackPageProps) {
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   async function fetchData() {
     setLoading(true)

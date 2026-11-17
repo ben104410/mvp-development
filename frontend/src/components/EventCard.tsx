@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Calendar, MapPin, Users, Video, CheckCircle2 } from 'lucide-react'
 import type { EventItem, UserProfile } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import api from '../api'
 
 interface EventCardProps {
@@ -21,10 +22,7 @@ export default function EventCard({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   const startDate = new Date(event.starts_at)
   const endDate = new Date(event.ends_at)

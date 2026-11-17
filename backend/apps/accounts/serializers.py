@@ -54,6 +54,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "groups",
+            "is_staff",
             "is_superuser",
         ]
         read_only_fields = fields

@@ -13,6 +13,7 @@ import {
   Download,
 } from 'lucide-react'
 import type { EventItem, UserProfile } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import api from '../api'
 import LivestreamModal from './LivestreamModal'
 
@@ -42,10 +43,7 @@ export default function EventDetailsModal({
 
   if (!isOpen || !event) return null
 
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   const startDate = new Date(event.starts_at)
   const endDate = new Date(event.ends_at)

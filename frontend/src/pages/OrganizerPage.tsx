@@ -18,6 +18,7 @@ import {
   MessageSquare,
 } from 'lucide-react'
 import type { EventItem, EventAnalyticsData, UserProfile } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import api from '../api'
 import CreateEventModal from '../components/CreateEventModal'
 import QRScannerModal from '../components/QRScannerModal'
@@ -30,10 +31,7 @@ interface OrganizerPageProps {
 
 export default function OrganizerPage({ user }: OrganizerPageProps) {
   const { showToast } = useToast()
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   const [events, setEvents] = useState<EventItem[]>([])
   const [analyticsMap, setAnalyticsMap] = useState<Record<number, EventAnalyticsData>>({})

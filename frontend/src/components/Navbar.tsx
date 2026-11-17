@@ -10,6 +10,7 @@ import {
   User,
 } from 'lucide-react'
 import type { UserProfile } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import ThemeToggle from './ThemeToggle'
 
 interface NavbarProps {
@@ -19,10 +20,7 @@ interface NavbarProps {
 
 export default function Navbar({ user, onLogout }: NavbarProps) {
   const location = useLocation()
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   const navLinks = [
     { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
@@ -71,7 +69,11 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
             <Link to="/profile" className="user-pill" title="View my profile">
               <User size={16} />
               <span className="user-name">{user.username}</span>
-              {isOrganizer && <span className="role-tag">Organizer</span>}
+              {isOrganizer && (
+                <span className="role-tag">
+                  {user.is_superuser || user.is_staff ? 'Admin' : 'Organizer'}
+                </span>
+              )}
             </Link>
           )}
           <button

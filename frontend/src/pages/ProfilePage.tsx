@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import type { UserProfile, EventRegistrationItem, FeedbackItem } from '../types'
+import { isUserAdminOrOrganizer } from '../types'
 import api from '../api'
 import AttendanceSummaryModal from '../components/AttendanceSummaryModal'
 import TicketPassModal from '../components/TicketPassModal'
@@ -31,10 +32,7 @@ export default function ProfilePage({ user, onLogout }: ProfilePageProps) {
   const [isCertModalOpen, setIsCertModalOpen] = useState(false)
   const [selectedPass, setSelectedPass] = useState<EventRegistrationItem | null>(null)
 
-  const isOrganizer = Boolean(
-    user?.is_superuser ||
-      user?.groups?.some((g) => ['organizer', 'admin'].includes(g)),
-  )
+  const isOrganizer = isUserAdminOrOrganizer(user)
 
   useEffect(() => {
     async function loadUserData() {
