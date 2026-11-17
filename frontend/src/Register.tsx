@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { User, ShieldCheck, Sparkles } from 'lucide-react'
 import api from './api'
 
 interface RegistrationForm {
@@ -8,6 +9,7 @@ interface RegistrationForm {
   email: string
   password: string
   password2: string
+  role: 'user' | 'admin'
 }
 
 function formatRegistrationError(error: unknown): string {
@@ -36,6 +38,7 @@ export default function Register() {
     email: '',
     password: '',
     password2: '',
+    role: 'user',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -44,6 +47,10 @@ export default function Register() {
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
+  }
+
+  function handleRoleSelect(selectedRole: 'user' | 'admin') {
+    setForm((current) => ({ ...current, role: selectedRole }))
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -61,7 +68,12 @@ export default function Register() {
       await api.post('/auth/register/', form)
       navigate('/login', {
         replace: true,
-        state: { message: 'Account created. Please sign in.' },
+        state: {
+          message:
+            form.role === 'admin'
+              ? 'Administrator account created successfully! Please sign in.'
+              : 'Account created successfully! Please sign in.',
+        },
       })
     } catch (requestError: unknown) {
       setError(formatRegistrationError(requestError))
@@ -75,6 +87,52 @@ export default function Register() {
       <form className="login-card" onSubmit={handleSubmit}>
         <h1>Create an account</h1>
         <p>Join the Swahilipot Smart Hub community.</p>
+
+        {/* Account Role Selector */}
+        <label>Account Role</label>
+        <div className="auth-role-selector">
+          <button
+            type="button"
+            className={`auth-role-card ${form.role === 'user' ? 'active' : ''}`}
+            onClick={() => handleRoleSelect('user')}
+          >
+            <div className="auth-role-header">
+              <div className="auth-role-icon icon-user">
+                <User size={18} />
+              </div>
+              <span className="auth-role-title">Normal User</span>
+            </div>
+            <p className="auth-role-desc">
+              Discover workshops, register for events, and get QR passes.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            className={`auth-role-card ${form.role === 'admin' ? 'active' : ''}`}
+            onClick={() => handleRoleSelect('admin')}
+          >
+            <div className="auth-role-header">
+              <div className="auth-role-icon icon-admin">
+                <ShieldCheck size={18} />
+              </div>
+              <span className="auth-role-title">Administrator</span>
+            </div>
+            <p className="auth-role-desc">
+              Add and manage events, scan entrance tickets, and view analytics.
+            </p>
+          </button>
+        </div>
+
+        {form.role === 'admin' && (
+          <div className="admin-privilege-notice">
+            <Sparkles size={16} className="notice-icon" />
+            <span>
+              <strong>Administrator Access:</strong> You will be granted admin
+              privileges to add events, scan entrance tickets, and post broadcasts.
+            </span>
+          </div>
+        )}
 
         <label htmlFor="username">Username</label>
         <input
@@ -126,7 +184,11 @@ export default function Register() {
         )}
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Creating account...' : 'Register'}
+          {loading
+            ? 'Creating account...'
+            : form.role === 'admin'
+              ? 'Register as Administrator'
+              : 'Register as Normal User'}
         </button>
 
         <p className="form-footer">

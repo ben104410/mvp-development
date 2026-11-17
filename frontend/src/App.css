@@ -4532,6 +4532,185 @@ html.dark .role-tag-header {
   border-color: #3b82f6;
 }
 
+/* Auth Role Selector & Login Tabs */
+.auth-role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .auth-role-selector {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auth-role-card {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.auth-role-card:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.auth-role-card.active {
+  background: #eff6ff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+
+.auth-role-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.auth-role-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-user {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.auth-role-card.active .icon-user {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.icon-admin {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.auth-role-card.active .icon-admin {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.auth-role-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.auth-role-desc {
+  font-size: 11px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.admin-privilege-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.admin-privilege-notice .notice-icon {
+  color: #2563eb;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.login-role-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.login-role-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.login-role-tab:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.login-role-tab.active {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+
+/* Dark Mode Extra 4 */
+html.dark .auth-role-card,
+html.dark .login-role-tab {
+  background: #1c2541;
+  border-color: #2e3a59;
+  color: #cbd5e1;
+}
+
+html.dark .auth-role-card:hover,
+html.dark .login-role-tab:hover {
+  background: #243054;
+  border-color: #3b82f6;
+}
+
+html.dark .auth-role-card.active,
+html.dark .login-role-tab.active {
+  background: #1e3a8a;
+  border-color: #60a5fa;
+  color: #93c5fd;
+}
+
+html.dark .auth-role-title {
+  color: #f8fafc;
+}
+
+html.dark .auth-role-desc {
+  color: #94a3b8;
+}
+
+html.dark .admin-privilege-notice {
+  background: #1e3a8a;
+  border-color: #3b82f6;
+  color: #bfdbfe;
+}
+
 
 
 

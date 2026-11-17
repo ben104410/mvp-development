@@ -1,26 +1,20 @@
 import { useState, type FormEvent } from 'react'
 import axios from 'axios'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { User, ShieldCheck } from 'lucide-react'
 import api from './api'
+import type { UserProfile } from './types'
+import { isUserAdminOrOrganizer } from './types'
 
 interface TokenResponse {
   access: string
   refresh: string
 }
 
-interface UserProfile {
-  id: number
-  username: string
-  email: string
-  first_name: string
-  last_name: string
-  groups: string[]
-  is_superuser: boolean
-}
-
 export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<'user' | 'admin'>('user')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -45,11 +39,28 @@ export default function Login() {
       try {
         const profile = await api.get<UserProfile>('/auth/me/')
         localStorage.setItem('user', JSON.stringify(profile.data))
-      } catch {
-        // Fall back gracefully if profile cannot be fetched
-      }
 
-      navigate('/dashboard', { replace: true })
+        const isAdmin = isUserAdminOrOrganizer(profile.data)
+
+        if (role === 'admin' && !isAdmin) {
+          localStorage.removeItem('access')
+          localStorage.removeItem('refresh')
+          localStorage.removeItem('user')
+          setError(
+            'Access Denied: This account does not have administrator privileges. Please switch to "Normal User" or register an Administrator account.',
+          )
+          return
+        }
+
+        if (role === 'admin' || isAdmin) {
+          navigate('/organizer', { replace: true })
+        } else {
+          navigate('/dashboard', { replace: true })
+        }
+        return
+      } catch {
+        navigate('/dashboard', { replace: true })
+      }
     } catch (requestError: unknown) {
       localStorage.removeItem('access')
       localStorage.removeItem('refresh')
@@ -77,6 +88,33 @@ export default function Login() {
           </p>
         )}
 
+        {/* Portal Role Tabs */}
+        <label>Portal Role</label>
+        <div className="login-role-tabs">
+          <button
+            type="button"
+            className={`login-role-tab ${role === 'user' ? 'active' : ''}`}
+            onClick={() => {
+              setRole('user')
+              setError('')
+            }}
+          >
+            <User size={16} />
+            <span>Normal User</span>
+          </button>
+          <button
+            type="button"
+            className={`login-role-tab ${role === 'admin' ? 'active' : ''}`}
+            onClick={() => {
+              setRole('admin')
+              setError('')
+            }}
+          >
+            <ShieldCheck size={16} />
+            <span>Administrator</span>
+          </button>
+        </div>
+
         <label htmlFor="username">Username</label>
         <input
           id="username"
@@ -103,7 +141,11 @@ export default function Login() {
         )}
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading
+            ? 'Signing in...'
+            : role === 'admin'
+              ? 'Sign in as Administrator'
+              : 'Sign in as Normal User'}
         </button>
 
         <p className="form-footer">

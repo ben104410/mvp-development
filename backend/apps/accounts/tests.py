@@ -32,6 +32,24 @@ class RegisterSerializerTests(APITestCase):
         self.assertTrue(serializer.is_valid(), serializer.errors)
         user = serializer.save()
         self.assertTrue(user.check_password("Strong-Unique-Password-937!"))
+        self.assertFalse(user.is_staff)
+
+    def test_creates_admin_account_when_admin_role_selected(self):
+        serializer = RegisterSerializer(
+            data={
+                "username": "new-admin",
+                "email": "admin@example.com",
+                "password": "Strong-Unique-Password-937!",
+                "password2": "Strong-Unique-Password-937!",
+                "role": "admin",
+            }
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        user = serializer.save()
+        self.assertTrue(user.check_password("Strong-Unique-Password-937!"))
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.groups.filter(name="admin").exists())
 
 
 class UserProfileSerializerTests(APITestCase):
